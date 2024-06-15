@@ -1,0 +1,12 @@
+.App {
+  height: 100vh;
+}
+body {
+  overflow: hidden;
+  margin: 0;
+  background-color: #f1e5d1;
+}
+.content {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
