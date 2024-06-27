@@ -1,5 +1,7 @@
 package com.example.backend.Config;
 
+import com.cloudinary.Cloudinary;
+import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -29,14 +33,23 @@ public class SecurityConfig {
             , "/api/auth/login"
             , "/api/auth/introspect"
             , "api/authority/add"
+            , "api/role/add"
     };
 
     public final String[] getMethodURL = {
-            "/api/product",
-            "/api/authority"
+            "/api/product"
+//            , "/api/authority"
+//            , "/api/account/**"
+//            , "/api/role"
     };
+    public final String[] putMethodURL = {
+            "/api/account/update/**"
+    };
+    public final String[] delMethodURL = {
 
-    @Value("${security.oauth2.resource.jwt.key-value}")
+    };
+    @NonFinal
+    @Value("${jwt.signerKey}")
     private String signKey;
 
     @Bean
@@ -45,7 +58,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, postMethodURL).permitAll()
                         .requestMatchers(HttpMethod.GET, getMethodURL).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/account").hasRole("Directors")
+                        .requestMatchers(HttpMethod.PUT, putMethodURL).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/account").hasRole("ADMIN")
                         .anyRequest().authenticated()
         );
         http.oauth2ResourceServer(oauth2 ->
@@ -58,7 +72,7 @@ public class SecurityConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
@@ -88,4 +102,16 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
+
+    @Bean
+    public Cloudinary cloudinaryConfig() {
+        Cloudinary cloudinary = null;
+        Map config = new HashMap();
+        config.put("cloud_name", "spring");
+        config.put("api_key", "257562752433573");
+        config.put("api_secret", "D2QJiKun4Z6-TX0bltYsmyuEtB4");
+        cloudinary = new Cloudinary(config);
+        return cloudinary;
+    }
+
 }

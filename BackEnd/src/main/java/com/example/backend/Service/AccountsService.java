@@ -7,15 +7,18 @@ import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapAccounts;
 import com.example.backend.Model.Accounts;
 import com.example.backend.Repositories.AccountsDAO;
+import com.example.backend.Repositories.RolesDAO;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -24,10 +27,11 @@ import java.util.List;
 public class AccountsService {
     AccountsDAO dao;
     MapAccounts mapAccounts;
+    RolesDAO rolesDAO;
     PasswordEncoder passwordEncoder;
 
-    public List<Accounts> getList() {
-        return dao.findAll();
+    public List<ResponseAccounts> getList() {
+        return dao.findAll().stream().map(mapAccounts::responseAccounts).toList();
     }
 
     public Page<Accounts> getPage(Integer num) {
@@ -35,31 +39,44 @@ public class AccountsService {
         return dao.findAll(pageable);
     }
 
-    public Accounts detail(String username) {
-        return dao.findById(username).orElseThrow(() -> new GlobalException(ErrorCode.USER_EXISTED));
+    public ResponseAccounts detail(String username) {
+        return mapAccounts.responseAccounts(dao.findById(username).orElseThrow(() -> new GlobalException(ErrorCode.USER_EXISTED)));
     }
 
     public ResponseAccounts addNew(RequestAccounts acc) {
-        if (dao.existsAccountsByUserName(acc.getUserName())) {
+        if (dao.existsAccountsByEmail(acc.getEmail())) {
             throw new RuntimeException("username existes");
         }
         Accounts a = mapAccounts.mapAccounts(acc);
-
         a.setPassWord(passwordEncoder.encode(acc.getPassWord()));
+        var roles = rolesDAO.findAllById(acc.getRoles());
+        a.setRoles(new HashSet<>(roles));
         return mapAccounts.responseAccounts(dao.save(a));
     }
 
     public ResponseAccounts updateNew(String username, RequestAccounts acc) {
         Accounts a = dao.findById(username).orElseThrow(() -> new RuntimeException("username does not exist"));
         mapAccounts.updateAccounts(a, acc);
+        a.setPassWord(passwordEncoder.encode(acc.getPassWord()));
+        var roles = rolesDAO.findAllById(acc.getRoles());
+        a.setRoles(new HashSet<>(roles));
         return mapAccounts.responseAccounts(dao.save(a));
 
     }
 
-    public Accounts delete(String username) {
+    public ResponseAccounts delete(String username) {
         return dao.findById(username).map(a -> {
             dao.deleteById(username);
-            return a;
+            return mapAccounts.responseAccounts(a);
         }).orElse(null);
+    }
+
+    public ResponseAccounts getInfo() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var acc = dao.findByEmail(name).orElseThrow(
+                () -> new GlobalException(ErrorCode.USER_NOT_EXIST)
+        );
+        return mapAccounts.responseAccounts(acc);
     }
 }

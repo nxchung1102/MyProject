@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @AllArgsConstructor
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class ResponseOrderDetails {

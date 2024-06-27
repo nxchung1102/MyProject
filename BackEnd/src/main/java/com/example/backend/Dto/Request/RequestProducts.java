@@ -11,6 +11,7 @@ import java.sql.Date;
 @Data
 @Builder
 @AllArgsConstructor
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class RequestProducts {

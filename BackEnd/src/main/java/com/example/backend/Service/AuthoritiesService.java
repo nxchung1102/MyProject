@@ -22,8 +22,8 @@ public class AuthoritiesService {
     AuthoritiesDAO dao;
     MapAuthorities mapAuthorities;
 
-    public List<Authorities> getList() {
-        return dao.findAll();
+    public List<ResponseAuthorities> getList() {
+        return dao.findAll().stream().map(mapAuthorities::responseAuthorities).toList();
     }
 
     public Page<Authorities> getPage(Integer num) {
@@ -31,9 +31,9 @@ public class AuthoritiesService {
         return dao.findAll(pageable);
     }
 
-    public Authorities detail(Integer id) {
-        return dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseAuthorities detail(String name) {
+        return mapAuthorities.responseAuthorities(dao.findById(name)
+                .orElseThrow(() -> new RuntimeException("name does not exist")));
     }
 
     public ResponseAuthorities addNew(RequestAuthorities auth) {
@@ -41,17 +41,17 @@ public class AuthoritiesService {
         return mapAuthorities.responseAuthorities(a);
     }
 
-    public ResponseAuthorities updateNew(Integer id, RequestAuthorities auth) {
-        Authorities a = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseAuthorities updateNew(String name, RequestAuthorities auth) {
+        Authorities a = dao.findById(name)
+                .orElseThrow(() -> new RuntimeException("name does not exist"));
         mapAuthorities.updateAuthorities(a, auth);
         return mapAuthorities.responseAuthorities(dao.save(a));
     }
 
-    public Authorities delete(Integer id) {
-        return dao.findById(id).map(au -> {
-            dao.deleteById(id);
-            return au;
+    public ResponseAuthorities delete(String name) {
+        return dao.findById(name).map(au -> {
+            dao.deleteById(name);
+            return mapAuthorities.responseAuthorities(au);
         }).orElse(null);
     }
 }

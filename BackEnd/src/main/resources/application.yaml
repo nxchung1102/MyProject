@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/mydb"
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: true
+
+jwt:
+  signerKey: "5emSn+40DQPMDdcm8jlrRU8M/rWRjNS4btG9EviG4d6qPMLcU+MyVVB8hXTBNneX"
+  valid-duration: 3600 # in second
+  refreshable-duration: 36000 # in seconds

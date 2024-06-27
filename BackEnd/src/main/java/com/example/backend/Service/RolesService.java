@@ -4,6 +4,7 @@ import com.example.backend.Dto.Request.RequestRoles;
 import com.example.backend.Dto.Response.ResponseRoles;
 import com.example.backend.Mapper.MapRoles;
 import com.example.backend.Model.Roles;
+import com.example.backend.Repositories.AuthoritiesDAO;
 import com.example.backend.Repositories.RolesDAO;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -22,9 +24,10 @@ public class RolesService {
 
     RolesDAO dao;
     MapRoles mapRoles;
+    AuthoritiesDAO authoritiesDAO;
 
-    public List<Roles> getList() {
-        return dao.findAll();
+    public List<ResponseRoles> getList() {
+        return dao.findAll().stream().map(mapRoles::responseRoles).toList();
     }
 
     public Page<Roles> getPage(Integer num) {
@@ -32,30 +35,35 @@ public class RolesService {
         return dao.findAll(pageable);
     }
 
-    public Roles detail(String id) {
-        return dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseRoles detail(String id) {
+        return mapRoles.responseRoles(dao.findById(id)
+                .orElseThrow(() -> new RuntimeException("id does not exist")));
     }
 
     public ResponseRoles addNew(RequestRoles role) {
+//        System.out.println(role);
         Roles r = mapRoles.mapRoles(role);
-
-        return mapRoles.responseRoles(dao.save(r));
+        var author = authoritiesDAO.findAllById(role.getAuthorities());
+        r.setAuthorities(new HashSet<>(author));
+        System.out.println(author);
+        dao.save(r);
+        return mapRoles.responseRoles(r);
     }
 
     public ResponseRoles updateNew(String id, RequestRoles role) {
         Roles r = dao.findById(id)
                 .orElseThrow(() -> new RuntimeException("id does not exist"));
         mapRoles.updateRoles(r, role);
-
+        var author = authoritiesDAO.findAllById(role.getAuthorities());
+        r.setAuthorities(new HashSet<>(author));
         return mapRoles.responseRoles(dao.save(r));
     }
 
-    public Roles delete(String id) {
+    public ResponseRoles delete(String id) {
 
         return dao.findById(id).map(r -> {
             dao.deleteById(id);
-            return r;
+            return mapRoles.responseRoles(r);
         }).orElse(null);
     }
 

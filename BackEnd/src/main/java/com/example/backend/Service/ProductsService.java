@@ -22,8 +22,8 @@ public class ProductsService {
     MapProducts mapProducts;
     ProductsDAO dao;
 
-    public List<Products> getList() {
-        return dao.findAll();
+    public List<ResponseProducts> getList() {
+        return dao.findAll().stream().map(mapProducts::responseProducts).toList();
     }
 
     public Page<Products> getPage(Integer num) {
@@ -31,9 +31,9 @@ public class ProductsService {
         return dao.findAll(pageable);
     }
 
-    public Products detail(Integer id) {
-        return dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseProducts detail(Integer id) {
+        return mapProducts.responseProducts(dao.findById(id)
+                .orElseThrow(() -> new RuntimeException("id does not exist")));
     }
 
     public ResponseProducts addNew(RequestProducts prd) {
@@ -49,11 +49,11 @@ public class ProductsService {
         return mapProducts.responseProducts(dao.save(p));
     }
 
-    public Products delete(Integer id) {
+    public ResponseProducts delete(Integer id) {
 
         return dao.findById(id).map(p -> {
             dao.deleteById(id);
-            return p;
+            return mapProducts.responseProducts(p);
         }).orElse(null);
     }
 }

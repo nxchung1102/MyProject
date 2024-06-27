@@ -11,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -20,8 +22,10 @@ public class AccountsController {
     AccountsService service;
 
     @GetMapping
-    public ResponseEntity<?> getList() {
-        return ResponseEntity.ok(service.getList());
+    public ResponseApi<?> getList() {
+        return ResponseApi.<List<ResponseAccounts>>builder()
+                .result(service.getList())
+                .build();
     }
 
     @GetMapping("/page")
@@ -32,6 +36,11 @@ public class AccountsController {
     @GetMapping("/{username}")
     public ResponseEntity<?> detail(@PathVariable("username") String username) {
         return ResponseEntity.ok(service.detail(username));
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<?> getInfo() {
+        return ResponseEntity.ok(service.getInfo());
     }
 
     @PostMapping("/add")
