@@ -9,6 +9,7 @@ import java.sql.Date;
 @Getter
 @Setter
 @AllArgsConstructor
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @Entity
@@ -19,7 +20,7 @@ public class Products {
     Integer id;
     @Column(name = "Name")
     String name;
-    @Column(name = "Image")
+    //    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     String image;
     @Column(name = "Price")
     Double price;

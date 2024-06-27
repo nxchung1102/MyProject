@@ -22,8 +22,8 @@ public class CategoriesService {
     MapCategories mapCategories;
     CategoriesDAO dao;
 
-    public List<Categories> getList() {
-        return dao.findAll();
+    public List<ResponseCategories> getList() {
+        return dao.findAll().stream().map(mapCategories::responseCategories).toList();
     }
 
     public Page<Categories> getPage(Integer num) {
@@ -31,9 +31,9 @@ public class CategoriesService {
         return dao.findAll(pageable);
     }
 
-    public Categories detail(Integer id) {
-        return dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseCategories detail(Integer id) {
+        return mapCategories.responseCategories(dao.findById(id)
+                .orElseThrow(() -> new RuntimeException("id does not exist")));
     }
 
     public ResponseCategories addNew(RequestCategories cate) {
@@ -48,10 +48,10 @@ public class CategoriesService {
         return mapCategories.responseCategories(dao.save(c));
     }
 
-    public Categories delete(Integer id) {
+    public ResponseCategories delete(Integer id) {
         return dao.findById(id).map(c -> {
             dao.delete(c);
-            return c;
+            return mapCategories.responseCategories(c);
         }).orElse(null);
     }
 }

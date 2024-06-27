@@ -22,8 +22,8 @@ public class OrderDetailsService {
     MapOrderDetails mapOrderDetails;
     OrderDetailsDAO dao;
 
-    public List<OrderDetails> getList() {
-        return dao.findAll();
+    public List<ResponseOrderDetails> getList() {
+        return dao.findAll().stream().map(mapOrderDetails::responseOrderDetails).toList();
     }
 
     public Page<OrderDetails> getPage(Integer num) {
@@ -31,9 +31,9 @@ public class OrderDetailsService {
         return dao.findAll(pageable);
     }
 
-    public OrderDetails detail(Long id) {
-        return dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+    public ResponseOrderDetails detail(Long id) {
+        return mapOrderDetails.responseOrderDetails(dao.findById(id)
+                .orElseThrow(() -> new RuntimeException("id does not exist")));
     }
 
     public ResponseOrderDetails addNew(RequestOrderDetails orderDetails) {
@@ -48,10 +48,10 @@ public class OrderDetailsService {
         return mapOrderDetails.responseOrderDetails(dao.save(o));
     }
 
-    public OrderDetails delete(Long id) {
+    public ResponseOrderDetails delete(Long id) {
         return dao.findById(id).map(o -> {
             dao.deleteById(id);
-            return o;
+            return mapOrderDetails.responseOrderDetails(o);
         }).orElse(null);
     }
 }

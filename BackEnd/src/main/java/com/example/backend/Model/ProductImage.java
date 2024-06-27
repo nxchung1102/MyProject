@@ -11,13 +11,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @Entity
-@Table(name = "Categories")
-public class Categories {
+@Table(name = "ProductImage")
+public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
     @Column(name = "Name")
-    String name;
-
-
+    String url;
+//    @ManyToOne
+//    @JoinColumn(name = "productId")
+//    Products product;
 }

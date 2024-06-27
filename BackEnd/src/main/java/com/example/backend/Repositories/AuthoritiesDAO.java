@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface AuthoritiesDAO extends JpaRepository<Authorities, Integer> {
+public interface AuthoritiesDAO extends JpaRepository<Authorities, String> {
     @Query(value = "select * from Authorities where Username like :username", nativeQuery = true)
     Optional<Authorities> getUserByUserName(@Param("username") String username);
 }

@@ -36,7 +36,7 @@ public class AuthoritiesController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> detail(@PathVariable("id") String id) {
         return ResponseEntity.ok(service.detail(id));
     }
 
@@ -48,14 +48,14 @@ public class AuthoritiesController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNew(@PathVariable("id") Integer id, @RequestBody @Valid RequestAuthorities auth) {
+    public ResponseEntity<?> updateNew(@PathVariable("id") String id, @RequestBody @Valid RequestAuthorities auth) {
         ResponseApi<ResponseAuthorities> api = new ResponseApi<>();
         api.setResult(service.updateNew(id, auth));
         return ResponseEntity.ok(api);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> delete(@PathVariable("id") String id) {
         return ResponseEntity.ok(service.delete(id));
     }
 }

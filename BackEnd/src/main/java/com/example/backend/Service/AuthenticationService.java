@@ -6,7 +6,7 @@ import com.example.backend.Dto.Response.ResponseAuthentication;
 import com.example.backend.Dto.Response.ResponseVerify;
 import com.example.backend.Exception.ErrorCode;
 import com.example.backend.Exception.GlobalException;
-import com.example.backend.Model.Authorities;
+import com.example.backend.Model.Accounts;
 import com.example.backend.Repositories.AccountsDAO;
 import com.example.backend.Repositories.AuthoritiesDAO;
 import com.nimbusds.jose.*;
@@ -26,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Date;
 import java.util.StringJoiner;
 
@@ -39,7 +38,7 @@ public class AuthenticationService {
     AccountsDAO repoAccountsDAO;
     PasswordEncoder passwordEncoder;
     @NonFinal
-    @Value("${security.oauth2.resource.jwt.key-value}")
+    @Value("${jwt.signerKey}")
     protected String signKey;
 
     public ResponseVerify verify(RequestVerify request) throws Exception {
@@ -54,8 +53,7 @@ public class AuthenticationService {
     }
 
     public ResponseAuthentication authenticate(RequestAuthentication request) throws Exception {
-        var user = repoAccountsDAO.findByUserName(request.getUserName()).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
-        var author = repoAuthoritiesDAO.getUserByUserName(request.getUserName()).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
+        var user = repoAccountsDAO.findById(request.getUserName()).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
 
 
         boolean authenticated = passwordEncoder.matches(request.getPassWord(), user.getPassWord());
@@ -63,7 +61,7 @@ public class AuthenticationService {
         if (!authenticated) {
             throw new GlobalException(ErrorCode.UNAUTHENTICATED);
         }
-        var token = genarateToken(author);
+        var token = genarateToken(user);
 
         return ResponseAuthentication.builder()
                 .token(token)
@@ -71,10 +69,10 @@ public class AuthenticationService {
                 .build();
     }
 
-    public String genarateToken(Authorities authorities) throws Exception {
+    public String genarateToken(Accounts acc) throws Exception {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
-        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder().subject(authorities.getUserName().getUserName()).issuer("TheC.com").issueTime(new Date()).expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())).claim("scope", buildScope(authorities)).build();
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder().subject(acc.getEmail()).issuer("TheC.com").issueTime(new Date()).expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())).claim("scope", buildScope(acc)).build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
@@ -84,10 +82,14 @@ public class AuthenticationService {
         return jwsObject.serialize();
     }
 
-    private String buildScope(Authorities authorities) {
-        StringJoiner joiner = new StringJoiner("");
-        if (!CollectionUtils.isEmpty(Collections.singleton(authorities.getRoleId().getName())))
-            joiner.add(authorities.getRoleId().getName());
+    private String buildScope(Accounts accounts) {
+        StringJoiner joiner = new StringJoiner(" ");
+        if (!CollectionUtils.isEmpty(accounts.getRoles()))
+            accounts.getRoles().forEach(role -> {
+                joiner.add("ROLE_" + role.getName());
+                if (!CollectionUtils.isEmpty(role.getAuthorities()))
+                    role.getAuthorities().forEach(authorities -> joiner.add(authorities.getName()));
+            });
         return joiner.toString();
     }
 }
