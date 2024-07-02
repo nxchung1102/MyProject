@@ -10,6 +10,7 @@ import java.sql.Date;
 @Setter
 @AllArgsConstructor
 @ToString
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @Entity

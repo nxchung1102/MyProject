@@ -8,8 +8,10 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,36 +22,44 @@ public class CategoriesController {
     CategoriesService service;
 
     @GetMapping
-    public ResponseEntity<?> getList() {
-        return ResponseEntity.ok(service.getList());
+    public ResponseApi<List<ResponseCategories>> getList() {
+        return ResponseApi.<List<ResponseCategories>>builder()
+                .result(service.getList())
+                .build();
     }
 
     @GetMapping("/page")
-    public ResponseEntity<?> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
-        return ResponseEntity.ok(service.getPage(page));
+    public ResponseApi<Page<ResponseCategories>> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+        return ResponseApi.<Page<ResponseCategories>>builder()
+                .result(service.getPage(page))
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable("id") Integer id) {
-        return ResponseEntity.ok(service.detail(id));
+    public ResponseApi<ResponseCategories> detail(@PathVariable("id") Integer id) {
+        return ResponseApi.<ResponseCategories>builder()
+                .result(service.detail(id))
+                .build();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNew(@RequestBody @Valid RequestCategories cate) {
-        ResponseApi<ResponseCategories> api = new ResponseApi<>();
-        api.setResult(service.addNew(cate));
-        return ResponseEntity.ok(api);
+    public ResponseApi<ResponseCategories> addNew(@RequestBody @Valid RequestCategories cate) {
+        return ResponseApi.<ResponseCategories>builder()
+                .result(service.addNew(cate))
+                .build();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNew(@PathVariable("id") Integer id, @RequestBody @Valid RequestCategories cate) {
-        ResponseApi<ResponseCategories> api = new ResponseApi<>();
-        api.setResult(service.updateNew(id, cate));
-        return ResponseEntity.ok(api);
+    @PutMapping("/{id}")
+    public ResponseApi<ResponseCategories> updateNew(@PathVariable("id") Integer id, @RequestBody @Valid RequestCategories cate) {
+        return ResponseApi.<ResponseCategories>builder()
+                .result(service.updateNew(id, cate))
+                .build();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Integer id) {
-        return ResponseEntity.ok(service.delete(id));
+    @DeleteMapping("/{id}")
+    public ResponseApi<ResponseCategories> delete(@PathVariable("id") Integer id) {
+        return ResponseApi.<ResponseCategories>builder()
+                .result(service.delete(id))
+                .build();
     }
 }

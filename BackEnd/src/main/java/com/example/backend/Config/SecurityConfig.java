@@ -1,19 +1,16 @@
 package com.example.backend.Config;
 
 import com.cloudinary.Cloudinary;
-import lombok.experimental.NonFinal;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +27,7 @@ public class SecurityConfig {
     public final String[] postMethodURL = {
             "/api/account/add"
             , "/api/auth/login"
+            , "/api/auth/logout"
             , "/api/auth/introspect"
             , "api/authority/add"
             , "api/role/add"
@@ -48,9 +45,11 @@ public class SecurityConfig {
     public final String[] delMethodURL = {
 
     };
-    @NonFinal
-    @Value("${jwt.signerKey}")
-    private String signKey;
+
+    @Lazy
+    @Autowired
+    JwtCustom jwtCustom;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,9 +62,13 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
         );
         http.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(decoder())
+                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtCustom)
                         .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                ));
+                )).exceptionHandling(e ->
+                e.authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                        .accessDeniedHandler(new JwtAccessDeniedEntryPoint())
+
+        );
         return http.build();
     }
 
@@ -89,13 +92,6 @@ public class SecurityConfig {
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
 
         return new CorsFilter(urlBasedCorsConfigurationSource);
-    }
-
-    @Bean
-    JwtDecoder decoder() {
-        SecretKeySpec keySpec = new SecretKeySpec(signKey.getBytes(), "HS512");
-
-        return NimbusJwtDecoder.withSecretKey(keySpec).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     @Bean

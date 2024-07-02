@@ -34,18 +34,18 @@ public class AccountsService {
         return dao.findAll().stream().map(mapAccounts::responseAccounts).toList();
     }
 
-    public Page<Accounts> getPage(Integer num) {
+    public Page<ResponseAccounts> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseAccounts>) dao.findAll(pageable).stream().map(mapAccounts::responseAccounts).toList();
     }
 
     public ResponseAccounts detail(String username) {
-        return mapAccounts.responseAccounts(dao.findById(username).orElseThrow(() -> new GlobalException(ErrorCode.USER_EXISTED)));
+        return mapAccounts.responseAccounts(dao.findById(username).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST)));
     }
 
     public ResponseAccounts addNew(RequestAccounts acc) {
         if (dao.existsAccountsByEmail(acc.getEmail())) {
-            throw new RuntimeException("username existes");
+            throw new GlobalException(ErrorCode.USER_EXISTED);
         }
         Accounts a = mapAccounts.mapAccounts(acc);
         a.setPassWord(passwordEncoder.encode(acc.getPassWord()));
@@ -55,7 +55,7 @@ public class AccountsService {
     }
 
     public ResponseAccounts updateNew(String username, RequestAccounts acc) {
-        Accounts a = dao.findById(username).orElseThrow(() -> new RuntimeException("username does not exist"));
+        Accounts a = dao.findById(username).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
         mapAccounts.updateAccounts(a, acc);
         a.setPassWord(passwordEncoder.encode(acc.getPassWord()));
         var roles = rolesDAO.findAllById(acc.getRoles());
@@ -68,7 +68,7 @@ public class AccountsService {
         return dao.findById(username).map(a -> {
             dao.deleteById(username);
             return mapAccounts.responseAccounts(a);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
     }
 
     public ResponseAccounts getInfo() {

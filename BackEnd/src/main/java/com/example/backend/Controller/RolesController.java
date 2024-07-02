@@ -8,8 +8,10 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,36 +22,44 @@ public class RolesController {
     RolesService service;
 
     @GetMapping
-    public ResponseEntity<?> getList() {
-        return ResponseEntity.ok(service.getList());
+    public ResponseApi<List<ResponseRoles>> getList() {
+        return ResponseApi.<List<ResponseRoles>>builder()
+                .result(service.getList())
+                .build();
     }
 
     @GetMapping("/page")
-    public ResponseEntity<?> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
-        return ResponseEntity.ok(service.getPage(page));
+    public ResponseApi<Page<ResponseRoles>> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+        return ResponseApi.<Page<ResponseRoles>>builder()
+                .result(service.getPage(page))
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable("id") String id) {
-        return ResponseEntity.ok(service.detail(id));
+    public ResponseApi<ResponseRoles> detail(@PathVariable("id") String id) {
+        return ResponseApi.<ResponseRoles>builder()
+                .result(service.detail(id))
+                .build();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNew(@RequestBody @Valid RequestRoles r) {
-        ResponseApi<ResponseRoles> api = new ResponseApi<>();
-        api.setResult(service.addNew(r));
-        return ResponseEntity.ok(api);
+    public ResponseApi<ResponseRoles> addNew(@RequestBody @Valid RequestRoles r) {
+        return ResponseApi.<ResponseRoles>builder()
+                .result(service.addNew(r))
+                .build();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNew(@PathVariable("id") String id, @RequestBody @Valid RequestRoles r) {
-        ResponseApi<ResponseRoles> api = new ResponseApi<>();
-        api.setResult(service.updateNew(id, r));
-        return ResponseEntity.ok(api);
+    @PutMapping("/{id}")
+    public ResponseApi<ResponseRoles> updateNew(@PathVariable("id") String id, @RequestBody @Valid RequestRoles r) {
+        return ResponseApi.<ResponseRoles>builder()
+                .result(service.updateNew(id, r))
+                .build();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") String id) {
-        return ResponseEntity.ok(service.delete(id));
+    @DeleteMapping("/{id}")
+    public ResponseApi<ResponseRoles> delete(@PathVariable("id") String id) {
+        return ResponseApi.<ResponseRoles>builder()
+                .result(service.delete(id))
+                .build();
     }
 }

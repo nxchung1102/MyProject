@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestOrderDetails;
 import com.example.backend.Dto.Response.ResponseOrderDetails;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapOrderDetails;
 import com.example.backend.Model.OrderDetails;
 import com.example.backend.Repositories.OrderDetailsDAO;
@@ -26,14 +28,14 @@ public class OrderDetailsService {
         return dao.findAll().stream().map(mapOrderDetails::responseOrderDetails).toList();
     }
 
-    public Page<OrderDetails> getPage(Integer num) {
+    public Page<ResponseOrderDetails> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseOrderDetails>) dao.findAll(pageable).stream().map(mapOrderDetails::responseOrderDetails).toList();
     }
 
     public ResponseOrderDetails detail(Long id) {
         return mapOrderDetails.responseOrderDetails(dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ORDER_DETAIL_NOT_EXIST)));
     }
 
     public ResponseOrderDetails addNew(RequestOrderDetails orderDetails) {
@@ -43,7 +45,7 @@ public class OrderDetailsService {
 
     public ResponseOrderDetails updateNew(Long id, RequestOrderDetails orderDetails) {
         OrderDetails o = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ORDER_DETAIL_NOT_EXIST));
         mapOrderDetails.updateOrderDetails(o, orderDetails);
         return mapOrderDetails.responseOrderDetails(dao.save(o));
     }
@@ -52,6 +54,6 @@ public class OrderDetailsService {
         return dao.findById(id).map(o -> {
             dao.deleteById(id);
             return mapOrderDetails.responseOrderDetails(o);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.ORDER_DETAIL_NOT_EXIST));
     }
 }

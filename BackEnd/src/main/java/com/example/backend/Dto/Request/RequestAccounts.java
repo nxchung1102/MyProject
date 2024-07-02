@@ -11,16 +11,17 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @ToString
+
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class RequestAccounts {
+    @Email(message = "USER_EMAIL_REQUIRED")
+    @NotBlank(message = "USER_EMAIL_NOT_NULL")
+    String email;
     @NotBlank(message = "USER_PASSWORD_NOT_NULL")
     String passWord;
     @NotBlank(message = "USER_FULLNAME_NOT_NULL")
     String fullName;
-    @Email(message = "USER_EMAIL_REQUIRED")
-    @NotBlank(message = "USER_EMAIL_NOT_NULL")
-    String email;
     String photo;
     Set<String> roles;
 

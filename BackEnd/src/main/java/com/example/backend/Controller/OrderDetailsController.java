@@ -8,8 +8,10 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,36 +22,44 @@ public class OrderDetailsController {
     OrderDetailsService service;
 
     @GetMapping
-    public ResponseEntity<?> getList() {
-        return ResponseEntity.ok(service.getList());
+    public ResponseApi<List<ResponseOrderDetails>> getList() {
+        return ResponseApi.<List<ResponseOrderDetails>>builder()
+                .result(service.getList())
+                .build();
     }
 
     @GetMapping("/page")
-    public ResponseEntity<?> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
-        return ResponseEntity.ok(service.getPage(page));
+    public ResponseApi<Page<ResponseOrderDetails>> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+        return ResponseApi.<Page<ResponseOrderDetails>>builder()
+                .result(service.getPage(page))
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(service.detail(id));
+    public ResponseApi<ResponseOrderDetails> detail(@PathVariable("id") Long id) {
+        return ResponseApi.<ResponseOrderDetails>builder()
+                .result(service.detail(id))
+                .build();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNew(@RequestBody @Valid RequestOrderDetails od) {
-        ResponseApi<ResponseOrderDetails> api = new ResponseApi<>();
-        api.setResult(service.addNew(od));
-        return ResponseEntity.ok(api);
+    public ResponseApi<ResponseOrderDetails> addNew(@RequestBody @Valid RequestOrderDetails od) {
+        return ResponseApi.<ResponseOrderDetails>builder()
+                .result(service.addNew(od))
+                .build();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNew(@PathVariable("id") Long id, @RequestBody @Valid RequestOrderDetails od) {
-        ResponseApi<ResponseOrderDetails> api = new ResponseApi<>();
-        api.setResult(service.updateNew(id, od));
-        return ResponseEntity.ok(api);
+    @PutMapping("/{id}")
+    public ResponseApi<ResponseOrderDetails> updateNew(@PathVariable("id") Long id, @RequestBody @Valid RequestOrderDetails od) {
+        return ResponseApi.<ResponseOrderDetails>builder()
+                .result(service.updateNew(id, od))
+                .build();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(service.delete(id));
+    @DeleteMapping("/{id}")
+    public ResponseApi<ResponseOrderDetails> delete(@PathVariable("id") Long id) {
+        return ResponseApi.<ResponseOrderDetails>builder()
+                .result(service.delete(id))
+                .build();
     }
 }

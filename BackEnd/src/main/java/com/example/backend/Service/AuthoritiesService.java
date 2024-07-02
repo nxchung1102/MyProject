@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestAuthorities;
 import com.example.backend.Dto.Response.ResponseAuthorities;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapAuthorities;
 import com.example.backend.Model.Authorities;
 import com.example.backend.Repositories.AuthoritiesDAO;
@@ -26,14 +28,14 @@ public class AuthoritiesService {
         return dao.findAll().stream().map(mapAuthorities::responseAuthorities).toList();
     }
 
-    public Page<Authorities> getPage(Integer num) {
+    public Page<ResponseAuthorities> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseAuthorities>) dao.findAll(pageable).stream().map(mapAuthorities::responseAuthorities).toList();
     }
 
     public ResponseAuthorities detail(String name) {
         return mapAuthorities.responseAuthorities(dao.findById(name)
-                .orElseThrow(() -> new RuntimeException("name does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.AUTHOR_NOT_EXIST)));
     }
 
     public ResponseAuthorities addNew(RequestAuthorities auth) {
@@ -43,7 +45,7 @@ public class AuthoritiesService {
 
     public ResponseAuthorities updateNew(String name, RequestAuthorities auth) {
         Authorities a = dao.findById(name)
-                .orElseThrow(() -> new RuntimeException("name does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.AUTHOR_NOT_EXIST));
         mapAuthorities.updateAuthorities(a, auth);
         return mapAuthorities.responseAuthorities(dao.save(a));
     }
@@ -52,6 +54,6 @@ public class AuthoritiesService {
         return dao.findById(name).map(au -> {
             dao.deleteById(name);
             return mapAuthorities.responseAuthorities(au);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.AUTHOR_NOT_EXIST));
     }
 }
