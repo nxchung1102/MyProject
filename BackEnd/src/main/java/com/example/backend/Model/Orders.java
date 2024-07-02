@@ -13,6 +13,7 @@ import java.sql.Date;
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@Builder
 @Entity
 @Table(name = "Orders")
 public class Orders {

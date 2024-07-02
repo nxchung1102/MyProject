@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestCategories;
 import com.example.backend.Dto.Response.ResponseCategories;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapCategories;
 import com.example.backend.Model.Categories;
 import com.example.backend.Repositories.CategoriesDAO;
@@ -26,14 +28,14 @@ public class CategoriesService {
         return dao.findAll().stream().map(mapCategories::responseCategories).toList();
     }
 
-    public Page<Categories> getPage(Integer num) {
+    public Page<ResponseCategories> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseCategories>) dao.findAll(pageable).stream().map(mapCategories::responseCategories).toList();
     }
 
     public ResponseCategories detail(Integer id) {
         return mapCategories.responseCategories(dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.CATE_NOT_EXIST)));
     }
 
     public ResponseCategories addNew(RequestCategories cate) {
@@ -43,7 +45,7 @@ public class CategoriesService {
 
     public ResponseCategories updateNew(Integer id, RequestCategories cate) {
         Categories c = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.CATE_NOT_EXIST));
         mapCategories.updateCategories(c, cate);
         return mapCategories.responseCategories(dao.save(c));
     }
@@ -52,6 +54,6 @@ public class CategoriesService {
         return dao.findById(id).map(c -> {
             dao.delete(c);
             return mapCategories.responseCategories(c);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.CATE_NOT_EXIST));
     }
 }

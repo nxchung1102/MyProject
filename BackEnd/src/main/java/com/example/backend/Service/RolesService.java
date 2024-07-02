@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestRoles;
 import com.example.backend.Dto.Response.ResponseRoles;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapRoles;
 import com.example.backend.Model.Roles;
 import com.example.backend.Repositories.AuthoritiesDAO;
@@ -30,18 +32,17 @@ public class RolesService {
         return dao.findAll().stream().map(mapRoles::responseRoles).toList();
     }
 
-    public Page<Roles> getPage(Integer num) {
+    public Page<ResponseRoles> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseRoles>) dao.findAll(pageable).stream().map(mapRoles::responseRoles).toList();
     }
 
     public ResponseRoles detail(String id) {
         return mapRoles.responseRoles(dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ROLE_NOT_EXIST)));
     }
 
     public ResponseRoles addNew(RequestRoles role) {
-//        System.out.println(role);
         Roles r = mapRoles.mapRoles(role);
         var author = authoritiesDAO.findAllById(role.getAuthorities());
         r.setAuthorities(new HashSet<>(author));
@@ -52,7 +53,7 @@ public class RolesService {
 
     public ResponseRoles updateNew(String id, RequestRoles role) {
         Roles r = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ROLE_NOT_EXIST));
         mapRoles.updateRoles(r, role);
         var author = authoritiesDAO.findAllById(role.getAuthorities());
         r.setAuthorities(new HashSet<>(author));
@@ -64,7 +65,7 @@ public class RolesService {
         return dao.findById(id).map(r -> {
             dao.deleteById(id);
             return mapRoles.responseRoles(r);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.ROLE_NOT_EXIST));
     }
 
 }

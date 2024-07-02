@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestProducts;
 import com.example.backend.Dto.Response.ResponseProducts;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapProducts;
 import com.example.backend.Model.Products;
 import com.example.backend.Repositories.ProductsDAO;
@@ -26,14 +28,14 @@ public class ProductsService {
         return dao.findAll().stream().map(mapProducts::responseProducts).toList();
     }
 
-    public Page<Products> getPage(Integer num) {
+    public Page<ResponseProducts> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseProducts>) dao.findAll(pageable).stream().map(mapProducts::responseProducts).toList();
     }
 
     public ResponseProducts detail(Integer id) {
         return mapProducts.responseProducts(dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.PRODUCT_NOT_EXIST)));
     }
 
     public ResponseProducts addNew(RequestProducts prd) {
@@ -44,7 +46,7 @@ public class ProductsService {
 
     public ResponseProducts updateNew(Integer id, RequestProducts prd) {
         Products p = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.PRODUCT_NOT_EXIST));
         mapProducts.updateProducts(p, prd);
         return mapProducts.responseProducts(dao.save(p));
     }
@@ -54,6 +56,6 @@ public class ProductsService {
         return dao.findById(id).map(p -> {
             dao.deleteById(id);
             return mapProducts.responseProducts(p);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.PRODUCT_NOT_EXIST));
     }
 }

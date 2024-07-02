@@ -2,6 +2,8 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestOrders;
 import com.example.backend.Dto.Response.ResponseOrders;
+import com.example.backend.Exception.ErrorCode;
+import com.example.backend.Exception.GlobalException;
 import com.example.backend.Mapper.MapOrders;
 import com.example.backend.Model.Orders;
 import com.example.backend.Repositories.OrdersDAO;
@@ -26,14 +28,14 @@ public class OrdersService {
         return dao.findAll().stream().map(mapOrders::responseOrders).toList();
     }
 
-    public Page<Orders> getPage(Integer num) {
+    public Page<ResponseOrders> getPage(Integer num) {
         Pageable pageable = PageRequest.of(num, 10);
-        return dao.findAll(pageable);
+        return (Page<ResponseOrders>) dao.findAll(pageable).stream().map(mapOrders::responseOrders).toList();
     }
 
     public ResponseOrders detail(Long id) {
         return mapOrders.responseOrders(dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist")));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ORDER_NOT_EXIST)));
     }
 
     public ResponseOrders addNew(RequestOrders orders) {
@@ -43,7 +45,7 @@ public class OrdersService {
 
     public ResponseOrders updateNew(Long id, RequestOrders orders) {
         Orders o = dao.findById(id)
-                .orElseThrow(() -> new RuntimeException("id does not exist"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.ORDER_NOT_EXIST));
         mapOrders.updateOrders(o, orders);
         return mapOrders.responseOrders(dao.save(o));
     }
@@ -52,6 +54,6 @@ public class OrdersService {
         return dao.findById(id).map(o -> {
             dao.deleteById(id);
             return mapOrders.responseOrders(o);
-        }).orElse(null);
+        }).orElseThrow(() -> new GlobalException(ErrorCode.ORDER_NOT_EXIST));
     }
 }

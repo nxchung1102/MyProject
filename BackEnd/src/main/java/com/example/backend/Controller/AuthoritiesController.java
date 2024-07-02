@@ -9,9 +9,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,39 +24,44 @@ public class AuthoritiesController {
     AuthoritiesService service;
 
     @GetMapping
-    public ResponseEntity<?> getList() throws Exception {
-        var authen = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("name: " + authen.getName());
-        System.out.println("name: " + authen.getAuthorities());
-        return ResponseEntity.ok(service.getList());
+    public ResponseApi<List<ResponseAuthorities>> getList() throws Exception {
+        return ResponseApi.<List<ResponseAuthorities>>builder()
+                .result(service.getList())
+                .build();
     }
 
     @GetMapping("/page")
-    public ResponseEntity<?> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
-        return ResponseEntity.ok(service.getPage(page));
+    public ResponseApi<Page<ResponseAuthorities>> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+        return ResponseApi.<Page<ResponseAuthorities>>builder()
+                .result(service.getPage(page))
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable("id") String id) {
-        return ResponseEntity.ok(service.detail(id));
+    public ResponseApi<ResponseAuthorities> detail(@PathVariable("id") String id) {
+        return ResponseApi.<ResponseAuthorities>builder()
+                .result(service.detail(id))
+                .build();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNew(@RequestBody @Valid RequestAuthorities auth) {
-        ResponseApi<ResponseAuthorities> api = new ResponseApi<>();
-        api.setResult(service.addNew(auth));
-        return ResponseEntity.ok(api);
+    public ResponseApi<ResponseAuthorities> addNew(@RequestBody @Valid RequestAuthorities auth) {
+        return ResponseApi.<ResponseAuthorities>builder()
+                .result(service.addNew(auth))
+                .build();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNew(@PathVariable("id") String id, @RequestBody @Valid RequestAuthorities auth) {
-        ResponseApi<ResponseAuthorities> api = new ResponseApi<>();
-        api.setResult(service.updateNew(id, auth));
-        return ResponseEntity.ok(api);
+    @PutMapping("/{id}")
+    public ResponseApi<ResponseAuthorities> updateNew(@PathVariable("id") String id, @RequestBody @Valid RequestAuthorities auth) {
+        return ResponseApi.<ResponseAuthorities>builder()
+                .result(service.updateNew(id, auth))
+                .build();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") String id) {
-        return ResponseEntity.ok(service.delete(id));
+    @DeleteMapping("/{id}")
+    public ResponseApi<ResponseAuthorities> delete(@PathVariable("id") String id) {
+        return ResponseApi.<ResponseAuthorities>builder()
+                .result(service.delete(id))
+                .build();
     }
 }

@@ -13,7 +13,7 @@ public class HandlerException {
         ResponseApi responseApi = new ResponseApi();
         responseApi.setStatus(ErrorCode.UNKNOWN.getCode());
         responseApi.setMessage(e.getMessage());
-        return ResponseEntity.badRequest().body(responseApi);
+        return ResponseEntity.status(ErrorCode.UNKNOWN.getStatusCode()).body(responseApi);
     }
 
     @ExceptionHandler(value = GlobalException.class)
@@ -22,8 +22,11 @@ public class HandlerException {
         ResponseApi responseApi = new ResponseApi();
         responseApi.setMessage(errorCode.getMessage());
         responseApi.setStatus(errorCode.getCode());
-        return ResponseEntity.badRequest().body(responseApi);
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(responseApi);
     }
+    
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ResponseApi> handleNotvalid(MethodArgumentNotValidException e) {
@@ -34,5 +37,6 @@ public class HandlerException {
         responseApi.setStatus(errorCode.getCode());
         return ResponseEntity.badRequest().body(responseApi);
     }
+
 
 }

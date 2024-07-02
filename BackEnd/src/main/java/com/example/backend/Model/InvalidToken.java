@@ -6,19 +6,19 @@ import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
+
 @Getter
-@Setter
 @Builder
+@Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @Entity
-@Table(name = "Authorities")
-public class Authorities {
+@Table(name = "InvalidToken")
+public class InvalidToken {
     @Id
-    String name;
-    String description;
-
-
+    String id;
+    Date expirationTime;
 }

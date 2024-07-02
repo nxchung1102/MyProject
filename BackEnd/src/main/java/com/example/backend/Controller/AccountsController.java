@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,46 +19,55 @@ import java.util.List;
 @CrossOrigin("*")
 @RequestMapping("/api/account")
 public class AccountsController {
+
     AccountsService service;
 
     @GetMapping
-    public ResponseApi<?> getList() {
+    public ResponseApi<List<ResponseAccounts>> getList() {
         return ResponseApi.<List<ResponseAccounts>>builder()
                 .result(service.getList())
                 .build();
     }
 
     @GetMapping("/page")
-    public ResponseEntity<?> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
-        return ResponseEntity.ok(service.getPage(page));
+    public ResponseApi<Page<ResponseAccounts>> getPage(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+        return ResponseApi.<Page<ResponseAccounts>>builder()
+                .result(service.getPage(page))
+                .build();
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<?> detail(@PathVariable("username") String username) {
-        return ResponseEntity.ok(service.detail(username));
+    public ResponseApi<ResponseAccounts> detail(@PathVariable("username") String username) {
+        return ResponseApi.<ResponseAccounts>builder()
+                .result(service.detail(username))
+                .build();
     }
 
     @GetMapping("/info")
-    public ResponseEntity<?> getInfo() {
-        return ResponseEntity.ok(service.getInfo());
+    public ResponseApi<ResponseAccounts> getInfo() {
+        return ResponseApi.<ResponseAccounts>builder()
+                .result(service.getInfo())
+                .build();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNew(@RequestBody @Valid RequestAccounts acc) {
-        ResponseApi<ResponseAccounts> api = new ResponseApi<>();
-        api.setResult(service.addNew(acc));
-        return ResponseEntity.ok(api);
+    public ResponseApi<ResponseAccounts> addNew(@RequestBody @Valid RequestAccounts acc) {
+        return ResponseApi.<ResponseAccounts>builder()
+                .result(service.addNew(acc))
+                .build();
     }
 
-    @PutMapping("/update/{username}")
-    public ResponseEntity<?> updateNew(@PathVariable("username") String username, @RequestBody @Valid RequestAccounts acc) {
-        ResponseApi<ResponseAccounts> api = new ResponseApi<>();
-        api.setResult(service.updateNew(username, acc));
-        return ResponseEntity.ok(api);
+    @PutMapping("/{username}")
+    public ResponseApi<ResponseAccounts> updateNew(@PathVariable("username") String username, @RequestBody @Valid RequestAccounts acc) {
+        return ResponseApi.<ResponseAccounts>builder()
+                .result(service.updateNew(username, acc))
+                .build();
     }
 
-    @DeleteMapping("/delete/{username}")
-    public ResponseEntity<?> delete(@PathVariable("username") String username) {
-        return ResponseEntity.ok(service.delete(username));
+    @DeleteMapping("/{username}")
+    public ResponseApi<ResponseAccounts> delete(@PathVariable("username") String username) {
+        return ResponseApi.<ResponseAccounts>builder()
+                .result(service.delete(username))
+                .build();
     }
 }
