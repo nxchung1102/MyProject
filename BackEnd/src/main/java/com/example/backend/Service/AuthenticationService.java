@@ -2,6 +2,7 @@ package com.example.backend.Service;
 
 import com.example.backend.Dto.Request.RequestAuthentication;
 import com.example.backend.Dto.Request.RequestLogout;
+import com.example.backend.Dto.Request.RequestRefresh;
 import com.example.backend.Dto.Request.RequestVerify;
 import com.example.backend.Dto.Response.ResponseAuthentication;
 import com.example.backend.Dto.Response.ResponseVerify;
@@ -43,13 +44,22 @@ public class AuthenticationService {
     PasswordEncoder passwordEncoder;
     @NonFinal
     @Value("${jwt.signerKey}")
-    protected String signKey;
+    protected String SIGNER_KEY;
+
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected Long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refresh-duration}")
+    protected Long REFRESH_DURATION;
+
 
     public ResponseVerify checkExpiration(RequestVerify request) throws JOSEException, ParseException {
         var token = request.getToken();
         boolean flag = true;
         try {
-            verifyToken(token);
+            verifyToken(token, false);
         } catch (GlobalException e) {
             flag = false;
         }
@@ -59,15 +69,15 @@ public class AuthenticationService {
     }
 
     public ResponseAuthentication authenticate(RequestAuthentication request) throws JOSEException {
-        var user = repoAccountsDAO.findById(request.getUserName()).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
+        var account = repoAccountsDAO.findById(request.getUserName()).orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_EXIST));
 
 
-        boolean authenticated = passwordEncoder.matches(request.getPassWord(), user.getPassWord());
+        boolean authenticated = passwordEncoder.matches(request.getPassWord(), account.getPassWord());
 
         if (!authenticated) {
             throw new GlobalException(ErrorCode.UNAUTHENTICATED);
         }
-        var token = genarateToken(user);
+        var token = genarateToken(account);
 
         return ResponseAuthentication.builder()
                 .token(token)
@@ -82,7 +92,7 @@ public class AuthenticationService {
                 .subject(acc.getEmail())
                 .issuer("TheC.com")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS)
+                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS)
                         .toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(acc)).build();
@@ -91,7 +101,7 @@ public class AuthenticationService {
 
         JWSObject jwsObject = new JWSObject(header, payload);
 
-        jwsObject.sign(new MACSigner(signKey.getBytes()));
+        jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
         return jwsObject.serialize();
     }
 
@@ -107,20 +117,29 @@ public class AuthenticationService {
     }
 
     public void logout(RequestLogout req) throws ParseException, JOSEException {
-        var getToken = verifyToken(req.getToken());
-        String tokenId = getToken.getJWTClaimsSet().getJWTID();
-        Date expirationTime = getToken.getJWTClaimsSet().getExpirationTime();
-        InvalidToken invalidToken = InvalidToken.builder()
-                .id(tokenId)
-                .expirationTime(expirationTime)
-                .build();
-        tokenDAO.save(invalidToken);
+        try {
+            var getToken = verifyToken(req.getToken(), true);
+            String tokenId = getToken.getJWTClaimsSet().getJWTID();
+            Date expirationTime = getToken.getJWTClaimsSet().getExpirationTime();
+            InvalidToken invalidToken = InvalidToken.builder()
+                    .id(tokenId)
+                    .expirationTime(expirationTime)
+                    .build();
+            tokenDAO.save(invalidToken);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("logout failed");
+        }
+
     }
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
-        JWSVerifier verifier = new MACVerifier(signKey.getBytes());
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
-        Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiration = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                .toInstant().plus(REFRESH_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
         var vrified = signedJWT.verify(verifier);
         if (!(vrified && expiration.after(new Date()))) {
             throw new GlobalException(ErrorCode.UNAUTHENTICATED);
@@ -129,5 +148,26 @@ public class AuthenticationService {
             throw new GlobalException(ErrorCode.UNAUTHENTICATED);
         }
         return signedJWT;
+    }
+
+    public ResponseAuthentication refreshToken(RequestRefresh req) throws ParseException, JOSEException {
+        var getToken = verifyToken(req.getToken(), true);
+        var tokenId = getToken.getJWTClaimsSet().getJWTID();
+        var expirationTime = getToken.getJWTClaimsSet().getExpirationTime();
+        InvalidToken invalidToken = InvalidToken.builder()
+                .id(tokenId)
+                .expirationTime(expirationTime)
+                .build();
+        tokenDAO.save(invalidToken);
+        var email = getToken.getJWTClaimsSet().getSubject();
+
+        var account = repoAccountsDAO.findByEmail(email)
+                .orElseThrow(() -> new GlobalException(ErrorCode.UNAUTHENTICATED));
+        var token = genarateToken(account);
+
+        return ResponseAuthentication.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
     }
 }

@@ -18,6 +18,6 @@ spring:
 jwt:
   signerKey: "5emSn+40DQPMDdcm8jlrRU8M/rWRjNS4btG9EviG4d6qPMLcU+MyVVB8hXTBNneX"
   valid-duration: 3600 # in second
-  refreshable-duration: 36000 # in seconds
+  refresh-duration: 36000 # in seconds
 
   ## docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=my-secret-pw -e TZ=Asia/Ho_Chi_Minh -d mysql:latest --event_scheduler=ON
