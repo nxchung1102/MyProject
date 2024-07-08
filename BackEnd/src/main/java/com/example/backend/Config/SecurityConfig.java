@@ -28,6 +28,7 @@ public class SecurityConfig {
             "/api/account/add"
             , "/api/auth/login"
             , "/api/auth/logout"
+            , "/api/auth/refresh"
             , "/api/auth/introspect"
             , "api/authority/add"
             , "api/role/add"

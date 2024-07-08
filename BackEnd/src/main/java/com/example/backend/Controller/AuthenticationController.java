@@ -2,6 +2,7 @@ package com.example.backend.Controller;
 
 import com.example.backend.Dto.Request.RequestAuthentication;
 import com.example.backend.Dto.Request.RequestLogout;
+import com.example.backend.Dto.Request.RequestRefresh;
 import com.example.backend.Dto.Request.RequestVerify;
 import com.example.backend.Dto.Response.ResponseApi;
 import com.example.backend.Dto.Response.ResponseAuthentication;
@@ -36,6 +37,13 @@ public class AuthenticationController {
     public ResponseApi<ResponseVerify> authenticate(@RequestBody RequestVerify request) throws ParseException, JOSEException {
         return ResponseApi.<ResponseVerify>builder()
                 .result(service.checkExpiration(request))
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseApi<ResponseAuthentication> refreshToken(@RequestBody RequestRefresh request) throws JOSEException, ParseException {
+        return ResponseApi.<ResponseAuthentication>builder()
+                .result(service.refreshToken(request))
                 .build();
     }
 
